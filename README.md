@@ -4,6 +4,8 @@ Fetch Rewards Coding Exercise - Analytics Engineer
 
 
 1. Create Tables:
+
+```
 postgres=# create database "fetch";
 CREATE DATABASE
 postgres=# \c fetch
@@ -74,4 +76,6 @@ fetch=# CREATE TABLE Receipt_Items (
     FOREIGN KEY (barcode) REFERENCES Brands(barcode)
 );
 CREATE TABLE
-fetch=# 
+fetch=#
+
+```
