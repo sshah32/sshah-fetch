@@ -137,7 +137,7 @@ ORDER BY current.Rank, previous.Rank;
 ```
 -- Above queries are under assumption that Indexes exist on receiptid, purchasedate, barcode. The Monthly Ranking CTE calculates the number of receipts per brand for the last two months. Rank function helps to get rank by partition by the month and otder by ID.
 
-Which brand has the most spend among users who were created within the past 6 months?
+3. Which brand has the most spend among users who were created within the past 6 months?
 ```
 WITH RecentUsers AS (
     SELECT _id 
@@ -163,7 +163,7 @@ LIMIT 1;
 ```
 -- The first CTE pull the recent users in last 6 months. The next CTE aggregates finalPrice from receipt_items for all receipts for these users. The next CTE gets the sum of the totalspend by barcode.
 
-Which brand has the most transactions among users who were created within the past 6 months?
+4. Which brand has the most transactions among users who were created within the past 6 months?
 ```
 WITH RecentUsers AS (
     SELECT _id 
@@ -188,6 +188,33 @@ ORDER BY bt.TransactionCount DESC
 LIMIT 1;
 ```
 -- The first CTE gets recent users in last 6 months. The next CTE helps to calculate the transactions for each brand, grouped by barcode. The final query orders the transaction count and gets the one with highest transactions.
+
+5. When considering average spend from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
+
+```
+SELECT 
+    rewardsReceiptStatus,
+    AVG(CAST(totalSpent AS NUMERIC)) AS avg_spend
+FROM receipts
+WHERE rewardsReceiptStatus IN ('Accepted', 'Rejected')
+GROUP BY rewardsReceiptStatus
+ORDER BY avg_spend DESC;
+```
+-- The first one in the resultset will be the greater one as we ordering by Desc, and the results should show the average spend for both Accepted and Rejected. 
+
+6. When considering total number of items purchased from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
+
+```
+SELECT 
+    r.rewardsReceiptStatus,
+    SUM(ri.quantityPurchased) AS total_items_purchased
+FROM receipts r
+JOIN receipt_items ri ON r._id = ri.receiptId
+WHERE r.rewardsReceiptStatus IN ('Accepted', 'Rejected')
+GROUP BY r.rewardsReceiptStatus
+ORDER BY total_items_purchased DESC;
+```
+-- The above query will share the result with desc first , which will give us which is greater. Sum calculates the total number of items purchased for each of the accepted or rejected status.
 
 
 # Third: Evaluate Data Quality Issues in the Data Provided
