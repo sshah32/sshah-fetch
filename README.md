@@ -62,7 +62,7 @@ fetch=# CREATE TABLE Receipts (
     FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 CREATE TABLE
-fetch=# CREATE TABLE Receipt_Items (
+fetch=# CREATE TABLE rewards_receipt_items (
     item_id SERIAL PRIMARY KEY,
     receipt_id VARCHAR(24),
     barcode VARCHAR(50),
@@ -85,6 +85,26 @@ fetch=#
 
 ```
 # Second: Write queries that directly answer predetermined questions from a business stakeholder
+
+What are the top 5 brands by receipts scanned for most recent month?
+
+```
+WITH RecentMonth AS (
+    SELECT DATE_TRUNC('month', MAX(PurchaseDate)) AS recent_month
+    FROM receipts
+)
+SELECT 
+    b.Name AS BrandName, 
+    COUNT(DISTINCT r.ReceiptId) AS TotalReceipts
+FROM rewards_receipt_items rri
+JOIN receipts r ON rri.ReceiptId = r.ReceiptId
+JOIN brands b ON rri.BrandId = b.BrandId
+JOIN RecentMonth lm ON DATE_TRUNC('month', r.PurchaseDate) = lm.recent_month
+GROUP BY b.Name
+ORDER BY TotalReceipts DESC
+LIMIT 5;
+```
+
 # Third: Evaluate Data Quality Issues in the Data Provided
 1. Same Barcode Names for Multiple Brands
 ```
