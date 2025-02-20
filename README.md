@@ -116,6 +116,12 @@ DETAIL:  Key (barcode)=(511111504139) already exists.
 # Fourth: Communicate with Stakeholders
 Construct an email or slack message that is understandable to a product or business leader who isn’t familiar with your day to day work. This part of the exercise should show off how you communicate and reason about data with others. Commit your answers to the git repository along with the rest of your exercise.
 
+Summary of Slack message to Stakeholder summarizing what other info I plan to gather working with stakeholder ( below I have attempted to answer the questions in Detail ) 
+
+Dear Stakeholder, As we design and understand the Data Model for this data I am able to perform the data loading for these with some assumptions. I'd like to take a moment and ask some clarifying questions to prepare a datastore that is performant, resilient and scalable. Some of these questions include  whether the columns expect to have duplicates and preferred default values for it. Is it possible to define the data retention criterias for these tables ? And if we can have an better understanding of the anticipated read and write workload patterns. Thank you.
+
+# Attempting all the other considerations I'd take when I Design this datastore.
+
 What questions do you have about the data?
 1) What columns can we expect to have Unique Data ? If duplicate data comes in , how to handle conflict ( for example on conflict ... do nothing, on conflict...update ) ? 
 2) Ask Questions about the Read and Write frequency - to get an idea of how much normalized this data need to be made while drawing the ER diagram, and the implementation. Trade-off's is : Normalized ( removing redundancy by breaking down JSON into structured tables ) vs Denormalized ( Ease of Querying Data ) 
