@@ -131,7 +131,25 @@ DETAIL:  Key (barcode)=(511111504139) already exists.
 ```
 3. Some of the columns Missing for certain records. For example Users table did not have lastLogin for all columns. I'd propose to add a workaround to add a default value if not provided, working with stakeholders/end users around what they'd expect as well.
 
-4. 
+4. User ID not present in Users table ( for the ones referenced in Reciepts )
+
+```
+(sanchit-venv) sanchitshah@mac Downloads % vi load-data.py
+(sanchit-venv) sanchitshah@mac Downloads % python3 load-data.py
+Traceback (most recent call last):
+  File "/Users/sanchitshah/Downloads/load-data.py", line 67, in <module>
+    cursor.execute("""
+    ~~~~~~~~~~~~~~^^^^
+        INSERT INTO Receipts (receipt_id, user_id, bonus_points_earned, bonus_points_reason, create_date,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<18 lines>...
+        float(receipt.get("totalSpent", 0.0))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "receipts" violates foreign key constraint "receipts_user_id_fkey"
+DETAIL:  Key (user_id)=(5f9c74f7c88c1415cbddb839) is not present in table "users".
+```
 
 # Fourth: Communicate with Stakeholders
 Construct an email or slack message that is understandable to a product or business leader who isn’t familiar with your day to day work. This part of the exercise should show off how you communicate and reason about data with others. Commit your answers to the git repository along with the rest of your exercise.
