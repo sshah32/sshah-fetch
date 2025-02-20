@@ -218,7 +218,7 @@ ORDER BY total_items_purchased DESC;
 
 
 # Third: Evaluate Data Quality Issues in the Data Provided
-As I began loading data using load-data.py , I encountered several data quality issues some of which is listed below. 
+As I began loading data using load-data.py , I encountered several data quality issues as listed below. 
 1. Same Barcode Names for Multiple Brands
 ```
 (sanchit-venv) sanchitshah@mac Downloads % python3 load-data.py
