@@ -86,7 +86,7 @@ fetch=#
 ```
 # Second: Write queries that directly answer predetermined questions from a business stakeholder
 
-What are the top 5 brands by receipts scanned for most recent month?
+1. What are the top 5 brands by receipts scanned for most recent month?
 
 ```
 WITH RecentMonth AS (
@@ -104,6 +104,90 @@ GROUP BY b.Name
 ORDER BY TotalReceipts DESC
 LIMIT 5;
 ```
+
+2. How does the ranking of the top 5 brands by receipts scanned for the recent month compare to the ranking for the previous month?
+
+```
+WITH MonthlyRankings AS (
+    SELECT 
+        b.name AS BrandName,
+        DATE_TRUNC('month', r.purchaseDate) AS PurchaseMonth,
+        COUNT(DISTINCT r._id) AS TotalReceipts,
+        RANK() OVER (PARTITION BY DATE_TRUNC('month', r.purchaseDate) ORDER BY COUNT(DISTINCT r._id) DESC) AS Rank
+    FROM receipts r
+    JOIN rewards_receipt_items ri ON r._id = ri.receiptId
+    JOIN brands b ON ri.barcode = b.barcode
+    WHERE r.purchaseDate >= (CURRENT_DATE - INTERVAL '2 months')  -- Only look at last 2 months
+    GROUP BY b.name, PurchaseMonth
+)
+SELECT 
+    current.BrandName, 
+    current.PurchaseMonth AS RecentMonth, 
+    current.Rank AS RecentRank,
+    previous.PurchaseMonth AS PrevMonth, 
+    previous.Rank AS PrevRank
+FROM MonthlyRankings current
+LEFT JOIN MonthlyRankings previous 
+    ON current.BrandName = previous.BrandName 
+    AND current.PurchaseMonth = (SELECT DATE_TRUNC('month', MAX(purchaseDate)) FROM receipts)
+    AND previous.PurchaseMonth = (SELECT DATE_TRUNC('month', MAX(purchaseDate) - INTERVAL '1 month') FROM receipts)
+WHERE current.Rank <= 5 OR previous.Rank <= 5
+ORDER BY current.Rank, previous.Rank;
+```
+-- Above queries are under assumption that Indexes exist on receiptid, purchasedate, barcode. The Monthly Ranking CTE calculates the number of receipts per brand for the last two months. Rank function helps to get rank by partition by the month and otder by ID.
+
+Which brand has the most spend among users who were created within the past 6 months?
+```
+WITH RecentUsers AS (
+    SELECT _id 
+    FROM users 
+    WHERE createdDate >= NOW() - INTERVAL '6 months'
+),
+UserSpending AS (
+    SELECT 
+        ri.barcode,
+        SUM(CAST(ri.finalPrice AS NUMERIC)) AS TotalSpend
+    FROM receipts r
+    JOIN rewards_receipt_items ri ON r._id = ri.receiptId
+    WHERE r.userId IN (SELECT _id FROM RecentUsers)
+    GROUP BY ri.barcode
+)
+SELECT 
+    b.name AS BrandName, 
+    us.TotalSpend
+FROM UserSpending us
+JOIN brands b ON us.barcode = b.barcode
+ORDER BY us.TotalSpend DESC
+LIMIT 1;
+```
+-- The first CTE pull the recent users in last 6 months. The next CTE aggregates finalPrice from receipt_items for all receipts for these users. The next CTE gets the sum of the totalspend by barcode.
+
+Which brand has the most transactions among users who were created within the past 6 months?
+```
+WITH RecentUsers AS (
+    SELECT _id 
+    FROM users 
+    WHERE createdDate >= NOW() - INTERVAL '6 months'
+),
+BrandTransactions AS (
+    SELECT 
+        ri.barcode,
+        COUNT(r._id) AS TransactionCount
+    FROM receipts r
+    JOIN rewards_receipt_items ri ON r._id = ri.receiptId
+    WHERE r.userId IN (SELECT _id FROM RecentUsers)
+    GROUP BY ri.barcode
+)
+SELECT 
+    b.name AS BrandName, 
+    bt.TransactionCount
+FROM BrandTransactions bt
+JOIN brands b ON bt.barcode = b.barcode
+ORDER BY bt.TransactionCount DESC
+LIMIT 1;
+```
+-- The first CTE gets recent users in last 6 months. The next CTE helps to calculate the transactions for each brand, grouped by barcode. The final query orders the transaction count and gets the one with highest transactions.
+
 
 # Third: Evaluate Data Quality Issues in the Data Provided
 1. Same Barcode Names for Multiple Brands
